@@ -1,0 +1,36 @@
+%%% makeVisualization.m
+%%% Generates MT visualizations for a list of line scan files
+%%%
+%%% Input Arguments
+%%% filesToPrint = cell string array of 
+
+function makeVisualization(filesToPrint,brightnessArray,numMTArray,roundLevel,pairMode)
+
+if ~exist('roundLevel','var')
+    roundLevel = 0.5;
+end
+if ~exist('pairMode','var')
+    pairMode = 0;
+end
+
+for i = 1:length(filesToPrint)
+    currFile = filesToPrint{i};
+    currB = brightnessArray(i);
+    numMTs = numMTArray(i);
+    
+    [folder,name,~] = fileparts(currFile);
+    scansIn = csvread(currFile);
+    
+    g = scansIn(:,1);
+    remScan = mod(g,currB);
+    ceilInds = remScan >= currB*roundLevel;
+    floorInds = remScan < currB*roundLevel;
+    qScan = zeros(size(g));
+    qScan(ceilInds) = ceil(g(ceilInds)/currB);
+    qScan(floorInds) = floor(g(floorInds)/currB);
+    [~,~,MTblock] = pairMTs(qScan,numMTs,pairMode);
+    fileOut = [folder,'\',name,'_visualization'];
+    [h1,h2] = visualizeMTs(qScan,MTblock,fileOut);
+    set(h1,'name',currFile);
+    set(h2,'name',currFile);
+end
